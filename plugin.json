@@ -5,7 +5,7 @@
     "version": "1.0.2",
     "description": "Quickly change Minecraft server version using MCJars API",
     "category": "plugin",
-    "url": "https://github.com/Olivier-D-Pelican-Plugins/Minecraft-Version-Changer",
+    "url": "https://github.com/pelican-plugins-community/minecraft-version-changer",
     "namespace": "Olivier\\MinecraftVersionChanger",
     "class": "MinecraftVersionChangerPlugin",
     "panels": [
