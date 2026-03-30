@@ -10,11 +10,5 @@
     "class": "MinecraftVersionChangerPlugin",
     "panels": [
         "server"
-    ],
-    "meta": {
-        "status": "enabled",
-        "status_message": null
-    }
-}r/www/pelican/plugins/Minecraft-Version-Changer/config/minecraft-version-changer.php): Failed to open stream: No such file or directory"
-    }
+    ]
 }
