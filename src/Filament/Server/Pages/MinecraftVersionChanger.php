@@ -42,19 +42,17 @@ class MinecraftVersionChanger extends Page implements HasForms
     public array $availableBuilds = [];
     public array $serverTypes = [];
 
-    private ?MCJarsApiService $apiService = null;
 
     public function mount(MCJarsApiService $apiService): void
     {
         $server = Filament::getTenant();
         
         abort_unless(user()?->can('minecraft-version-changer.view', $server), 403);
-        
-        $this->apiService = $apiService;
-        $this->serverTypes = $this->apiService->getServerTypes();
-        
-        $defaultType = $this->apiService->detectServerType($server);
-        $this->availableVersions = $this->apiService->getVersions($defaultType);
+
+        $this->serverTypes = $apiService->getServerTypes();
+
+        $defaultType = $apiService->detectServerType($server);
+        $this->availableVersions = $apiService->getVersions($defaultType);
         
         $this->form->fill([
             'server_type' => $defaultType,
