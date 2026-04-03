@@ -14,9 +14,9 @@ class MinecraftVersionChangerServiceProvider extends ServiceProvider
             'view',
             'change',
         ], 'tabler-package', false);
-        
+
         $this->mergeConfigFrom(
-            plugin_path('Minecraft-Version-Changer', 'config/minecraft-version-changer.php'),
+            plugin_path('minecraft-version-changer', 'config/minecraft-version-changer.php'),
             'minecraft-version-changer'
         );
     }

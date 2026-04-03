@@ -229,7 +229,15 @@ class MCJarsApiService
      */
     public function clearCache(): void
     {
+        $cachedTypes = Cache::get('mcjars.types', $this->getFallbackTypes());
         Cache::forget('mcjars.types');
+        foreach ($cachedTypes as $type) {
+            $versions = Cache::get("mcjars.versions.{$type}", []);
+            Cache::forget("mcjars.versions.{$type}");
+            foreach ($versions as $version) {
+                Cache::forget("mcjars.builds.{$type}.{$version}");
+            }
+         }
 
         $cachedTypes = Cache::get('mcjars.types', $this->getFallbackTypes());
         foreach ($cachedTypes as $type) {
