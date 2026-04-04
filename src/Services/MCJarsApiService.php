@@ -171,50 +171,34 @@ class MCJarsApiService
         $typeUpper = strtoupper($type);
 
         try {
-            $response = Http::timeout(10)->get(self::API_BASE_URL . "/builds/{$typeUpper}/{$version}");
+            $builds = $this->getBuilds($type, $version);
+            if ($builds === []) {
+                return null;
+            }
 
-            if ($response->successful()) {
-                $data = $response->json();
 
-                if (!isset($data['success']) || !$data['success']) {
-                    return null;
-                }
-
-                $builds = $data['builds'] ?? [];
-
-                if (empty($builds)) {
-                    return null;
-                }
-
-                // If projectVersionId is specified (for FORGE/NEOFORGE), find that specific build
-                $selectedBuild = null;
-                if ($projectVersionId !== null) {
-                    foreach ($builds as $build) {
-                        if (isset($build['projectVersionId']) && $build['projectVersionId'] == $projectVersionId) {
-                            $selectedBuild = $build;
-                            break;
-                        }
+            // If projectVersionId is specified (for FORGE/NEOFORGE), find that specific build
+            $selectedBuild = null;
+            if ($projectVersionId !== null) {
+                foreach ($builds as $build) {
+                    if (isset($build['projectVersionId']) && $build['projectVersionId'] == $projectVersionId) {
+                        $selectedBuild = $build;
+                        break;
                     }
                 }
-
-                // If no specific build found or requested, use latest build (first in reversed array)
-                if ($projectVersionId !== null && $selectedBuild === null) {
-                    return null;
-                }
-
-                // If no specific build was requested, use latest build
-                if ($selectedBuild === null) {
-                    $selectedBuild = array_values(array_reverse($builds))[0] ?? null;
-                }
-
-                // For FORGE, NEOFORGE and similar modded servers, use zipUrl instead of jarUrl
-                // jarUrl is null for these types, zipUrl contains the installer
-                $downloadUrl = $selectedBuild['zipUrl'] ?? $selectedBuild['jarUrl'] ?? null;
-
-                if ($downloadUrl) {
-                    return $downloadUrl;
-                }
             }
+
+            if ($projectVersionId !== null && $selectedBuild === null) {
+                return null;
+            }
+
+            // If no specific build was requested, use latest build
+            if ($selectedBuild === null) {
+                $selectedBuild = array_values(array_reverse($builds))[0] ?? null;
+            }
+
+            return $selectedBuild['zipUrl'] ?? $selectedBuild['jarUrl'] ?? null;
+
         } catch (\Exception $e) {
             // Silently handle error
         }
