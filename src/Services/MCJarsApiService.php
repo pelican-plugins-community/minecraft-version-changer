@@ -194,7 +194,7 @@ class MCJarsApiService
 
             // If no specific build was requested, use latest build
             if ($selectedBuild === null) {
-                $selectedBuild = array_values(array_reverse($builds))[0] ?? null;
+                $selectedBuild = array_values($builds)[0] ?? null;
             }
 
             return $selectedBuild['zipUrl'] ?? $selectedBuild['jarUrl'] ?? null;
