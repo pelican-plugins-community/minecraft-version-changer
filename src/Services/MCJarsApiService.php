@@ -20,6 +20,10 @@ class MCJarsApiService
      */
     public function getServerTypes(): array
     {
+        $cached = Cache::get('mcjars.types');
+        if ($cached !== null) {
+            return $cached;
+        }
         try {
             $response = Http::timeout(10)->get(self::API_BASE_URL . '/types');
 
@@ -46,9 +50,9 @@ class MCJarsApiService
                 }
             }
 
-            return Cache::remember('mcjars.types', $this->cacheDuration, function () use ($types) {
-                return array_keys($types);
-            });
+            $result = array_keys($types);
+            Cache::put('mcjars.types', $result, $this->cacheDuration);
+            return $result;
         } catch (\Exception $e) {
             // Silently handle error
         }
@@ -66,6 +70,11 @@ class MCJarsApiService
      */
     public function getVersions(?string $type): array
     {
+        $cached = Cache::get("mcjars.versions.{$typeUpper}");
+        if ($cached !== null) {
+            return $cached;
+
+        }
         if ($type === null) {
             return [];
         }
@@ -90,16 +99,16 @@ class MCJarsApiService
 
             foreach ($builds as $versionId => $versionData) {
                 if (isset($versionData['supported']) && $versionData['supported']) {
-                    $versiontype = $versionData['type'] ?? 'RELEASE';
-                    if ($versiontype === 'RELEASE') {
+                    $versionType = $versionData['type'] ?? 'RELEASE';
+                    if ($versionType === 'RELEASE') {
                         $versions[] = $versionId;
                     }
                 }
             }
 
-            return Cache::remember("mcjars.versions.{$typeUpper}", $this->cacheDuration, function () use ($versions) {
-                return array_reverse($versions);
-            });
+            $result = array_reverse($versions);
+            Cache::put("mcjars.versions.{$typeUpper}", $result, $this->cacheDuration);
+            return $result;
         } catch (\Exception $e) {
             // Silently handle error
         }
@@ -112,6 +121,11 @@ class MCJarsApiService
      */
     public function getBuilds(?string $type, ?string $version): array
     {
+        $cached = Cache::get("mcjars.builds.{$typeUpper}.{$version}");
+        if ($cached !== null) {
+            return $cached;
+        }
+
         if ($type === null || $version === null) {
             return [];
         }
@@ -133,10 +147,10 @@ class MCJarsApiService
 
             $builds = $data['builds'] ?? [];
 
-            return Cache::remember("mcjars.builds.{$typeUpper}.{$version}", $this->cacheDuration, function () use ($builds) {
-                // Return builds in reverse order (newest first)
-                return array_reverse($builds);
-            });
+            // Return builds in reverse order (newest first)
+            $result = array_reverse($builds);
+            Cache::put("mcjars.builds.{$typeUpper}.{$version}", $result, $this->cacheDuration);
+            return $result;
         } catch (\Exception $e) {
             // Silently handle error
         }
