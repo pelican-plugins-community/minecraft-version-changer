@@ -56,7 +56,7 @@ class MCJarsApiService
 
     private function getFallbackTypes(): array
     {
-        return ['VANILLA', 'PAPER', 'PURPUR', 'SPIGOT', 'FABRIC', 'FORGE'];
+        return ['VANILLA', 'PAPER', 'PURPUR', 'SPIGOT', 'FABRIC', 'FORGE', 'NEOFORGE'];
     }
 
     /**
@@ -239,10 +239,5 @@ class MCJarsApiService
                 Cache::forget("mcjars.builds.{$type}.{$version}");
             }
          }
-
-        $cachedTypes = Cache::get('mcjars.types', $this->getFallbackTypes());
-        foreach ($cachedTypes as $type) {
-            Cache::forget("mcjars.versions.{$type}");
-        }
     }
 }

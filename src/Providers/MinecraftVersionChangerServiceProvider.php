@@ -25,7 +25,7 @@ class MinecraftVersionChangerServiceProvider extends ServiceProvider
     {
         View::addNamespace(
             'minecraft-version-changer',
-            plugin_path('Minecraft-Version-Changer', 'resources/views')
+            plugin_path('minecraft-version-changer', 'resources/views')
         );
     }
 }
