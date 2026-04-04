@@ -168,8 +168,6 @@ class MCJarsApiService
             return null;
         }
 
-        $typeUpper = strtoupper($type);
-
         try {
             $builds = $this->getBuilds($type, $version);
             if ($builds === []) {
