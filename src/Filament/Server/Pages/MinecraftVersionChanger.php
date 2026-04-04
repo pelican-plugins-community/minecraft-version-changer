@@ -46,6 +46,7 @@ class MinecraftVersionChanger extends Page implements HasForms
     public function mount(MCJarsApiService $apiService): void
     {
         $server = Filament::getTenant();
+        $server?->loadMissing('egg');
         
         abort_unless(user()?->can('minecraft-version-changer.view', $server), 403);
 
@@ -237,6 +238,16 @@ class MinecraftVersionChanger extends Page implements HasForms
 
                             try {
                                 // Delete all files if option is checked
+                                $downloadUrl = $apiService->getDownloadUrl($serverType, $version, $build);
+
+                                if (!$downloadUrl) {
+                                    Notification::make()
+                                        ->title('Download failed')
+                                        ->body('Could not get download URL from MCJars API')
+                                        ->danger()
+                                        ->send();
+                                    return;
+                                }
                                 if ($deleteAllFiles) {
                                     Notification::make()
                                         ->title('Deleting all files...')
@@ -275,16 +286,6 @@ class MinecraftVersionChanger extends Page implements HasForms
                                             ->send();
                                         return;
                                     }
-                                }
-                                $downloadUrl = $apiService->getDownloadUrl($serverType, $version, $build);
-                                
-                                if (!$downloadUrl) {
-                                    Notification::make()
-                                        ->title('Download failed')
-                                        ->body('Could not get download URL from MCJars API')
-                                        ->danger()
-                                        ->send();
-                                    return;
                                 }
 
                                 $isZipFile = str_ends_with($downloadUrl, '.zip');
@@ -373,6 +374,7 @@ class MinecraftVersionChanger extends Page implements HasForms
     public static function shouldRegisterNavigation(): bool
     {
         $server = Filament::getTenant();
+        $server?->loadMissing('egg');
         
         if (!$server) {
             return false;
@@ -384,6 +386,7 @@ class MinecraftVersionChanger extends Page implements HasForms
     public static function canAccess(): bool
     {
         $server = Filament::getTenant();
+        $server?->loadMissing('egg');
         
         if (!$server) {
             return false;

@@ -178,7 +178,7 @@ class MCJarsApiService
                 
                 // If no specific build found or requested, use latest build (first in reversed array)
                 if ($selectedBuild === null) {
-                    $selectedBuild = reset($builds);
+                    $selectedBuild = array_values(array_reverse($builds))[0] ?? null;
                 }
                 
                 // For FORGE, NEOFORGE and similar modded servers, use zipUrl instead of jarUrl
@@ -208,6 +208,7 @@ class MCJarsApiService
             'paper' => 'PAPER',
             'purpur' => 'PURPUR',
             'fabric' => 'FABRIC',
+            'neoforge' => 'NEOFORGE',
             'forge' => 'FORGE',
             'spigot' => 'SPIGOT',
             'vanilla' => 'VANILLA',
