@@ -70,16 +70,17 @@ class MCJarsApiService
      */
     public function getVersions(?string $type): array
     {
-        $cached = Cache::get("mcjars.versions.{$typeUpper}");
-        if ($cached !== null) {
-            return $cached;
-
-        }
         if ($type === null) {
             return [];
         }
 
         $typeUpper = strtoupper($type);
+
+        $cached = Cache::get("mcjars.versions.{$typeUpper}");
+        if ($cached !== null) {
+            return $cached;
+
+        }
 
         try {
             $response = Http::timeout(10)->get(self::API_BASE_URL . "/builds/{$typeUpper}");
@@ -121,16 +122,16 @@ class MCJarsApiService
      */
     public function getBuilds(?string $type, ?string $version): array
     {
-        $cached = Cache::get("mcjars.builds.{$typeUpper}.{$version}");
-        if ($cached !== null) {
-            return $cached;
-        }
-
         if ($type === null || $version === null) {
             return [];
         }
 
         $typeUpper = strtoupper($type);
+
+        $cached = Cache::get("mcjars.builds.{$typeUpper}.{$version}");
+        if ($cached !== null) {
+            return $cached;
+        }
 
         try {
             $response = Http::timeout(10)->get(self::API_BASE_URL . "/builds/{$typeUpper}/{$version}");
