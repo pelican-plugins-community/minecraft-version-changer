@@ -20,38 +20,40 @@ class MCJarsApiService
      */
     public function getServerTypes(): array
     {
-        return Cache::remember('mcjars.types', $this->cacheDuration, function () {
-            try {
-                $response = Http::timeout(10)->get(self::API_BASE_URL . '/types');
-                
-                if ($response->successful()) {
-                    $data = $response->json();
-                    
-                    if (!isset($data['success']) || !$data['success']) {
-                        return $this->getFallbackTypes();
-                    }
+        try {
+            $response = Http::timeout(10)->get(self::API_BASE_URL . '/types');
 
-                    $types = [];
-                    $categories = $data['types'] ?? [];
-                    
-                    foreach (['recommended', 'established'] as $category) {
-                        if (isset($categories[$category])) {
-                            foreach ($categories[$category] as $key => $typeData) {
-                                if (!($typeData['deprecated'] ?? false)) {
-                                    $types[strtoupper($key)] = $typeData['name'] ?? $key;
-                                }
-                            }
-                        }
-                    }
-
-                    return array_keys($types);
-                }
-            } catch (\Exception $e) {
-                // Silently handle error
+            if (!$response->successful()) {
+                return $this->getFallbackTypes();
             }
 
-            return $this->getFallbackTypes();
-        });
+            $data = $response->json();
+
+            if (!isset($data['success']) || !$data['success']) {
+                return $this->getFallbackTypes();
+            }
+
+            $types = [];
+            $categories = $data['types'] ?? [];
+
+            foreach (['recommended', 'established'] as $category) {
+                if (isset($categories[$category])) {
+                    foreach ($categories[$category] as $key => $typeData) {
+                        if (!($typeData['deprecated'] ?? false)) {
+                            $types[strtoupper($key)] = $typeData['name'] ?? $key;
+                        }
+                    }
+                }
+            }
+
+            return Cache::remember('mcjars.types', $this->cacheDuration, function () use ($types) {
+                return array_keys($types);
+            });
+        } catch (\Exception $e) {
+            // Silently handle error
+        }
+
+        return $this->getFallbackTypes();
     }
 
     private function getFallbackTypes(): array
@@ -67,40 +69,42 @@ class MCJarsApiService
         if ($type === null) {
             return [];
         }
-        
+
         $typeUpper = strtoupper($type);
-        
-        return Cache::remember("mcjars.versions.{$typeUpper}", $this->cacheDuration, function () use ($typeUpper) {
-            try {
-                $response = Http::timeout(10)->get(self::API_BASE_URL . "/builds/{$typeUpper}");
-                
-                if ($response->successful()) {
-                    $data = $response->json();
-                    
-                    if (!isset($data['success']) || !$data['success']) {
-                        return [];
-                    }
 
-                    $versions = [];
-                    $builds = $data['builds'] ?? [];
-                    
-                    foreach ($builds as $versionId => $versionData) {
-                        if (isset($versionData['supported']) && $versionData['supported']) {
-                            $versiontype = $versionData['type'] ?? 'RELEASE';
-                            if ($versiontype === 'RELEASE') {
-                                $versions[] = $versionId;
-                            }
-                        }
-                    }
+        try {
+            $response = Http::timeout(10)->get(self::API_BASE_URL . "/builds/{$typeUpper}");
 
-                    return array_reverse($versions);
-                }
-            } catch (\Exception $e) {
-                // Silently handle error
+            if (!$response->successful()) {
+                return [];
             }
 
-            return [];
-        });
+            $data = $response->json();
+
+            if (!isset($data['success']) || !$data['success']) {
+                return [];
+            }
+
+            $versions = [];
+            $builds = $data['builds'] ?? [];
+
+            foreach ($builds as $versionId => $versionData) {
+                if (isset($versionData['supported']) && $versionData['supported']) {
+                    $versiontype = $versionData['type'] ?? 'RELEASE';
+                    if ($versiontype === 'RELEASE') {
+                        $versions[] = $versionId;
+                    }
+                }
+            }
+
+            return Cache::remember("mcjars.versions.{$typeUpper}", $this->cacheDuration, function () use ($versions) {
+                return array_reverse($versions);
+            });
+        } catch (\Exception $e) {
+            // Silently handle error
+        }
+
+        return [];
     }
 
     /**
@@ -111,31 +115,33 @@ class MCJarsApiService
         if ($type === null || $version === null) {
             return [];
         }
-        
+
         $typeUpper = strtoupper($type);
 
-        return Cache::remember("mcjars.builds.{$typeUpper}.{$version}", $this->cacheDuration, function () use ($typeUpper, $version) {
-            try {
-                $response = Http::timeout(10)->get(self::API_BASE_URL . "/builds/{$typeUpper}/{$version}");
+        try {
+            $response = Http::timeout(10)->get(self::API_BASE_URL . "/builds/{$typeUpper}/{$version}");
 
-                if ($response->successful()) {
-                    $data = $response->json();
-
-                    if (!isset($data['success']) || !$data['success']) {
-                        return [];
-                    }
-
-                    $builds = $data['builds'] ?? [];
-
-                    // Return builds in reverse order (newest first)
-                    return array_reverse($builds);
-                }
-            } catch (\Exception $e) {
-                // Silently handle error
+            if (!$response->successful()) {
+                return [];
             }
 
-            return [];
-        });
+            $data = $response->json();
+
+            if (!isset($data['success']) || !$data['success']) {
+                return [];
+            }
+
+            $builds = $data['builds'] ?? [];
+
+            return Cache::remember("mcjars.builds.{$typeUpper}.{$version}", $this->cacheDuration, function () use ($builds) {
+                // Return builds in reverse order (newest first)
+                return array_reverse($builds);
+            });
+        } catch (\Exception $e) {
+            // Silently handle error
+        }
+
+        return [];
     }
 
     /**
@@ -146,21 +152,21 @@ class MCJarsApiService
         if ($type === null || $version === null) {
             return null;
         }
-        
+
         $typeUpper = strtoupper($type);
-        
+
         try {
             $response = Http::timeout(10)->get(self::API_BASE_URL . "/builds/{$typeUpper}/{$version}");
-            
+
             if ($response->successful()) {
                 $data = $response->json();
-                
+
                 if (!isset($data['success']) || !$data['success']) {
                     return null;
                 }
 
                 $builds = $data['builds'] ?? [];
-                
+
                 if (empty($builds)) {
                     return null;
                 }
@@ -175,16 +181,21 @@ class MCJarsApiService
                         }
                     }
                 }
-                
+
                 // If no specific build found or requested, use latest build (first in reversed array)
+                if ($projectVersionId !== null && $selectedBuild === null) {
+                    return null;
+                }
+
+                // If no specific build was requested, use latest build
                 if ($selectedBuild === null) {
                     $selectedBuild = array_values(array_reverse($builds))[0] ?? null;
                 }
-                
+
                 // For FORGE, NEOFORGE and similar modded servers, use zipUrl instead of jarUrl
                 // jarUrl is null for these types, zipUrl contains the installer
                 $downloadUrl = $selectedBuild['zipUrl'] ?? $selectedBuild['jarUrl'] ?? null;
-                
+
                 if ($downloadUrl) {
                     return $downloadUrl;
                 }
@@ -203,7 +214,7 @@ class MCJarsApiService
     {
         $eggName = strtolower($server->egg->name);
         $tags = array_map('strtolower', $server->egg->tags ?? []);
-        
+
         $typeMap = [
             'paper' => 'PAPER',
             'purpur' => 'PURPUR',
@@ -215,16 +226,16 @@ class MCJarsApiService
             'folia' => 'FOLIA',
             'pufferfish' => 'PUFFERFISH',
         ];
-        
+
         foreach ($typeMap as $keyword => $type) {
             if (str_contains($eggName, $keyword) || in_array($keyword, $tags)) {
                 return $type;
             }
         }
-        
+
         return 'VANILLA';
     }
-    
+
     /**
      * Clear cache
      */
@@ -238,6 +249,6 @@ class MCJarsApiService
             foreach ($versions as $version) {
                 Cache::forget("mcjars.builds.{$type}.{$version}");
             }
-         }
+        }
     }
 }
