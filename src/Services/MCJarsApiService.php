@@ -62,7 +62,7 @@ class MCJarsApiService
 
     private function getFallbackTypes(): array
     {
-        return ['VANILLA', 'PAPER', 'PURPUR', 'SPIGOT', 'FABRIC', 'FORGE', 'NEOFORGE'];
+        return ['VANILLA', 'PAPER', 'PURPUR', 'SPIGOT', 'FABRIC', 'FORGE', 'NEOFORGE', 'LEAF'];
     }
 
     /**
@@ -222,6 +222,7 @@ class MCJarsApiService
             'vanilla' => 'VANILLA',
             'folia' => 'FOLIA',
             'pufferfish' => 'PUFFERFISH',
+            'leaf' => 'LEAF',
         ];
 
         foreach ($typeMap as $keyword => $type) {
